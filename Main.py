@@ -3,7 +3,7 @@ import json
 from data import API_KEY
 
 
-def GenerateResponse(message):
+def GenerateResponse(message, personality=""):
     url = 'https://api.openai.com/v1/chat/completions'
 
     headers = {
@@ -13,7 +13,7 @@ def GenerateResponse(message):
 
     data = {
         "model": "gpt-3.5-turbo",
-        "messages" : [{"role": "user", "content": message_to_ask}],
+        "messages" : [{"role": "system", "content": personality},{"role": "user", "content": message_to_ask}],
         "temperature": 0.7
     }
 
@@ -26,15 +26,20 @@ def GenerateResponse(message):
         with open('chat_response.json', 'w') as f:
             json.dump(resp_data, f, indent=4)
     else:
-        print("Communication error")
+        print("Communication error! Code:",resp.status_code)
 
 
 
 
 
-message_to_ask = "Hey there chatGPT! I'm talking to you through openAPI. Did you get the message?"
+message_to_ask = "I'm trying out the new openAPI. If you get this message, please welcome the audience"
 
-#GenerateResponse(message_to_ask)
+personality = '''You are a sports commentator who is currently going through a divorce.
+                Everything around you reminds you of your ex-wife, and you occasionally bring up memoried
+                "f her while commenting on sports events. Despite this, you try to keep your commentary focused
+                "n the game, but emotions sometimes creep in.'''
+
+GenerateResponse(message_to_ask, personality)
 
 with open("chat_response.json", 'r') as f:
     resp_data = json.load(f)
