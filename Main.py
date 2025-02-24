@@ -3,6 +3,7 @@ import json
 from data import API_KEY
 from jinja2 import Environment, FileSystemLoader
 import random
+import re
 
 def GenerateResponse(message, personality=""):
     url = 'https://api.openai.com/v1/chat/completions'
@@ -68,7 +69,7 @@ I have a python dictionary wth customer names as key,
  Please leave at least one person without recommendation.
  
  can you list your answer similar to to this format:
-        <r>name,item,percentage</r>
+        <n>name</n>,<i>item</i>,<p>percentage</p>
 Customer and interest dictionary: {0}
  Webshop items: {1}
  '''.format(customer_interests, stock)
@@ -88,7 +89,20 @@ with open("chat_response.json", 'r') as f:
 
 #print the response
 print("ChatGPT says:")
-print(resp_data['choices'][0]['message']['content'])
+resp_msg = resp_data['choices'][0]['message']['content']
+print(resp_msg)
+
+# Regular expression to extract values inside <n> and <i> tags
+pattern = r"<n>(.*?)</n>,<i>(.*?)</i>"
+
+# Extract all matches
+matches = re.findall(pattern, resp_msg)
+
+# Convert to dictionary
+customer_items = {name: item for name, item in matches}
+
+# Print the result
+print(customer_items)
 
 
 
@@ -98,5 +112,5 @@ env = Environment(loader=file_loader)
 
 template = env.get_template('email.txt')
 
-output = template.render()
+output = template.render(recommendations=customer_items, signature="Gergo")
 print(output)
