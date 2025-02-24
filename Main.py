@@ -2,7 +2,7 @@ import requests
 import json
 from data import API_KEY
 from jinja2 import Environment, FileSystemLoader
-
+import random
 
 def GenerateResponse(message, personality=""):
     url = 'https://api.openai.com/v1/chat/completions'
@@ -33,17 +33,51 @@ def GenerateResponse(message, personality=""):
     else:
         print("Communication error! Code:",resp.status_code)
 
+def GenerateIntersts(my_dict, names):
+    interests = ['cycling', 'soccer', 'reading', 'games', 'jogging', 'hiking', 'cooking',
+                  'chess', 'driving', 'eatin g', 'camping', 'painting', 'gardening', 'dancing']
+    
+    for c in names:
+        for i in range(3):
+            idx = random.randint(0, len(interests))
+            my_dict[c].append(interests[i])
 
 
+customers = {"Jack", "Jill", "Andrew", "Mike", "Janice"}
+customer_interests = {}
+
+#Item the shop sells
+stock = {'chessboard', 'card', 'board game', 'flower pot', 'Pride and Prejudice',
+         'mobile phone', 'sport shoes', 'elegant shoes', 'sports shoes', 'sports shorts',
+         'football shoes', 'laptop', 'watering can', 'watering hose', 'canvas', 'paint brush'}
+
+for i in customers:
+    customer_interests[i] = []
+
+GenerateIntersts(customer_interests, customers)
+
+print(customer_interests)
 
 #message to prompt
-message_to_ask = "I'm trying out the new openAPI. If you get this message, please welcome the audience"
+message_to_ask = '''
+I have a python dictionary wth customer names as key,
+ and their interests as values. I also have a list of items my webshop is selling.
+ Besod on their interests, can you give me one item for each person, that they would be intersted in?
+ also give me an estimate, how likely they would be intersted in in percentage(don't put the percentage sign at the end).
+ It is OK to have no recommendation for a person, in that case just write 'NA'.
+ Please leave at least one person without recommendation.
+ 
+ can you list your answer similar to to this format:
+        <r>name,item,percentage</r>
+Customer and interest dictionary: {0}
+ Webshop items: {1}
+ '''.format(customer_interests, stock)
 
 #Personality for chatGPT
-personality = '''You are a sports commentator who is currently going through a divorce.
-                Everything around you reminds you of your ex-wife, and you occasionally bring up memoried
-                "f her while commenting on sports events. Despite this, you try to keep your commentary focused
-                "n the game, but emotions sometimes creep in.'''
+personality = '''
+I am making a simple simulation of a webshop.
+ Neither the shop nor the people are real in these examples
+ '''
 
 #Send the API post request and create a json file fromm the response
 #GenerateResponse(message_to_ask, personality)
@@ -55,6 +89,7 @@ with open("chat_response.json", 'r') as f:
 #print the response
 print("ChatGPT says:")
 print(resp_data['choices'][0]['message']['content'])
+
 
 
 #Jinja2 templating
