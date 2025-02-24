@@ -1,6 +1,7 @@
 import requests
 import json
 from data import API_KEY
+from jinja2 import Environment, FileSystemLoader
 
 
 def GenerateResponse(message, personality=""):
@@ -54,3 +55,13 @@ with open("chat_response.json", 'r') as f:
 #print the response
 print("ChatGPT says:")
 print(resp_data['choices'][0]['message']['content'])
+
+
+#Jinja2 templating
+file_loader = FileSystemLoader('templates') 
+env = Environment(loader=file_loader)
+
+template = env.get_template('email.txt')
+
+output = template.render()
+print(output)
