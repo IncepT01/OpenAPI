@@ -1,6 +1,6 @@
 import requests
 import json
-from data import API_KEY
+from data import API_KEY, SF_DOMAIN, SF_AT
 from jinja2 import Environment, FileSystemLoader
 import random
 import re
