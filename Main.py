@@ -4,6 +4,7 @@ from data import API_KEY, SF_DOMAIN, SF_AT
 from jinja2 import Environment, FileSystemLoader
 import random
 import re
+import base64
 
 def GenerateResponse(message, personality=""):
     url = 'https://api.openai.com/v1/chat/completions'
@@ -18,7 +19,7 @@ def GenerateResponse(message, personality=""):
     data = {
         "model": "gpt-3.5-turbo",
         "messages" : [{"role": "system", "content": personality},{"role": "user", "content": message_to_ask}],
-        "temperature": 0.7
+        "temperature": 0
     }
 
     #Post request
@@ -66,7 +67,10 @@ def SalesforceGET():
     else:
         print("Communication error! Code:", resp.status_code, "Response:", resp.text)
 
-
+#Base64 filter for Jinja2
+def base64_decode(value):
+    decoded_bytes = base64.b64decode(value)
+    return decoded_bytes.decode("utf-8")
 
 customers = []
 
@@ -77,9 +81,10 @@ SalesforceGET()
 with open("SF_response.json", 'r') as f:
     resp_data = json.load(f)
 
-#put their names into an array
+#put their encoded names into an array
 for i in resp_data["recentItems"]:
-    customers.append(i['Name'])
+    print(i['Name'])
+    customers.append(base64.b64encode((i['Name'].encode("utf-8"))))
 
 customer_interests = {}
 
@@ -92,6 +97,7 @@ stock = {'chessboard', 'card', 'board game', 'flower pot', 'Pride and Prejudice'
 for i in customers:
     customer_interests[i] = []
 
+
 GenerateInterests(customer_interests, customers)
 
 
@@ -99,16 +105,18 @@ GenerateInterests(customer_interests, customers)
 
 #message to prompt
 message_to_ask = '''
-I have a python dictionary wth customer names as key,
+I have a python dictionary wth customer names as keys,
  and their interests as values. I also have a list of items my webshop is selling.
  Basedd on their interests, can you give me one item for each person, that they would be intersted in?
- Also give me an estimate, how likely they would be intersted in in percentage(don't put the percentage sign at the end).
- It is OK to have no recommendation for a person, in that case just write 'NA' as the item.
- Please leave at least one person without recommendation.
+ Also give me an estimate, how likely they would be intersted in, in percentage(don't put the percentage sign at the end).
+ Please leave at least one customer from the given customers without recommendation. Only work with customers who are given as keys.
+ Do not add new customers to the list and
+ Do not change their names at all, even if is is encoded!
  
  can you list your answer similar to to this format:
         <n>name</n>,<i>item</i>,<p>percentage</p>
-Customer and interest dictionary: {0}
+
+Customer and interests dictionary: {0}
  Webshop items: {1}
  '''.format(customer_interests, stock)
 
@@ -145,9 +153,12 @@ customer_items = {name: item for name, item in matches}
 file_loader = FileSystemLoader('templates') 
 env = Environment(loader=file_loader)
 
+#set the filter
+env.filters['b64decode'] = base64_decode
+
 template = env.get_template('email.txt')
 
-output = template.render(recommendations=customer_items, signature="Gergo")
-#print(output)
+output = template.render(recommendations=customer_items, signature="Gergo Tisza")
+print(output)
 with open('output.txt', 'w') as f:
     f.write(output)
